@@ -1,0 +1,215 @@
+
+
+Steps:
+======
+
+1. Create Spring Boot Project
+
+2. Maven Dependencies
+
+3. Configure Oracle Database
+
+4. Creating Model Layer
+
+5. Create Repository Layer
+
+6. Create Service Layer
+
+7. Create Controller Layer
+
+8. Run Spring Boot Application  [Internal/External tomcat deployments]
+
+9. Test using Postman app
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+1. Create Spring Boot Project
+
+2. Maven Dependencies
+
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		
+		
+		
+3. Configure Oracle Database
+
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
+spring.datasource.username=system
+spring.datasource.password=oracle
+
+spring.jpa.database-platform=org.hibernate.dialect.OracleDialect
+spring.jpa.show-sql=false
+spring.jpa.hibernate.ddl-auto=create-drop
+
+# HikariCP settings
+# spring.datasource.hikari.*
+
+spring.datasource.hikari.connection-timeout=60000
+spring.datasource.hikari.maximum-pool-size=5
+
+
+
+4. Creating Model Layer
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "product_table")
+public class Product {
+
+    @Id
+    @GeneratedValue
+    private int id;
+    private String name;
+    private int quantity;
+    private double price;
+}
+
+
+
+5. Create Repository Layer
+
+import com.springboot.crud.example.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductRepository extends JpaRepository<Product,Integer> {
+    Product findByName(String name);
+}
+
+
+
+6. Create Service Layer
+
+import com.springboot.crud.example.entity.Product;
+import com.springboot.crud.example.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ProductService {
+    @Autowired
+    private ProductRepository repository;
+
+    public Product saveProduct(Product product) {
+        return repository.save(product);
+    }
+
+    public List<Product> saveProducts(List<Product> products) {
+        return repository.saveAll(products);
+    }
+
+    public List<Product> getProducts() {
+        return repository.findAll();
+    }
+
+    public Product getProductById(int id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    public Product getProductByName(String name) {
+        return repository.findByName(name);
+    }
+
+    public String deleteProduct(int id) {
+        repository.deleteById(id);
+        return "product removed !! " + id;
+    }
+
+    public Product updateProduct(Product product) {
+        Product existingProduct = repository.findById(product.getId()).orElse(null);
+        existingProduct.setName(product.getName());
+        existingProduct.setQuantity(product.getQuantity());
+        existingProduct.setPrice(product.getPrice());
+        return repository.save(existingProduct);
+    }
+}
+
+
+
+
+7. Create Controller Layer
+
+import com.springboot.crud.example.entity.Product;
+import com.springboot.crud.example.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+public class ProductController {
+
+    @Autowired
+    private ProductService service;
+
+    @PostMapping("/addProduct")
+    public Product addProduct(@RequestBody Product product) {
+        return service.saveProduct(product);
+    }
+
+    @PostMapping("/addProducts")
+    public List<Product> addProducts(@RequestBody List<Product> products) {
+        return service.saveProducts(products);
+    }
+
+    @GetMapping("/products")
+    public List<Product> findAllProducts() {
+        return service.getProducts();
+    }
+
+    @GetMapping("/productById/{id}")
+    public Product findProductById(@PathVariable int id) {
+        return service.getProductById(id);
+    }
+
+    @GetMapping("/product/{name}")
+    public Product findProductByName(@PathVariable String name) {
+        return service.getProductByName(name);
+    }
+
+    @PutMapping("/update")
+    public Product updateProduct(@RequestBody Product product) {
+        return service.updateProduct(product);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public String deleteProduct(@PathVariable int id) {
+        return service.deleteProduct(id);
+    }
+}
+
+
+
+
+8. Run Spring Boot Application  [Internal/External deployments]
+
+9. Test using Postman app 
+
+
