@@ -9,6 +9,7 @@ public class TestDbApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(TestDbApplication.class, args);
 		System.out.println("SUCCESS");
+		System.out.println("Changes done by me....................");
 	}
 
 }
